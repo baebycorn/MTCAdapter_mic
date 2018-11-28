@@ -16,6 +16,9 @@ using System.Windows.Forms;
 using AForge.Math;
 using MTConnect;
 using System.Threading;
+using XMLGathering;
+
+
 // 8000, Mono
 // 10sec = 3535114 bytes
 
@@ -30,43 +33,39 @@ namespace MTCAdapter_Mic
         private bool isMTconnected = false;
 
         private IWaveIn captureDevice;
-        //private WaveFileWriter writer;
-        //private string outputFilename;
-        //private readonly string outputFolder;
+        private WaveFileWriter writer;
+        private string outputFilename;
+        private readonly string outputFolder;
 
-        // Globals: MTConnect
-        Adapter mAdapter = new Adapter();
-
-        //MTConnect.TimeSeries FFT_time = new TimeSeries("fft_f");
-        //MTConnect.TimeSeries FFT_ts = new TimeSeries("fft_v");
+        
+        // MTConnect - writing stethoscope
+        Adapter mAdapter = new Adapter();        
         MTConnect.Sample sample_signal_sum = new Sample("audio_signal1");
+        MTConnect.Event audio_filename = new Event("audio_rec_filename");
+
+        // MTConnect - reading Kuka robot 
+        MTCXMLParserKuka_forAudio mKuka = new MTCXMLParserKuka_forAudio();
+        static String kukaBaseUrl = "http://128.46.131.12/KUKA_Robot";
+        static String kukaCurrentUrl = kukaBaseUrl + "/current";
+        int sec_start = 0;
+        int sec_end = 0;
+
+
+
 
         // Auto calculation
-        private double runInterval = 0.1; // timer1 loop (sec)
-        private bool isAuto = false;
-        private float signal_sum = 0;
+        private double runInterval = 0.2; // timer1 loop (sec)       
 
-        public struct XY_Signal
-        {
-            public double x;
-            public double y;
-            public XY_Signal(double a, double b)
-            {
-                x = a;
-                y = b;
-            }
 
-        }
+
 
         public MicAdapter()
         {
-
             // MTConnect initialization
             // Initialization for MTConnect
-            //mAdapter.AddDataItem(sample_signal_sum);            
 
-
-            
+            mAdapter.AddDataItem(sample_signal_sum);
+            mAdapter.AddDataItem(audio_filename);
             InitializeComponent();
             LoadWasapiDevicesCombo();
 
@@ -74,25 +73,24 @@ namespace MTCAdapter_Mic
             comboBoxSampleRate.SelectedIndex = 0;
             comboBoxChannels.DataSource = new[] { "Mono", "Stereo" };
             comboBoxChannels.SelectedIndex = 0;
-            //outputFolder = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
-            //outputFolder = Directory.GetCurrentDirectory();
-            //Directory.CreateDirectory(outputFolder);
+            outputFolder = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
+            outputFolder = Directory.GetCurrentDirectory();
+            Directory.CreateDirectory(outputFolder);
             //outputFilename = GetFileName();
 
             timer1.Interval = (int)(runInterval * 1000);  
 
-
         }
 
-        //private string GetFileName()
-        //{
-        //    //var deviceName = captureDevice.GetType().Name;
-        //    //var sampleRate = $"{captureDevice.WaveFormat.SampleRate / 1000}kHz";
-        //    //var channels = captureDevice.WaveFormat.Channels == 1 ? "mono" : "stereo";
+        private string GetFileName()
+        {
+            var deviceName = captureDevice.GetType().Name;
+            var sampleRate = $"{captureDevice.WaveFormat.SampleRate / 1000}kHz";
+            var channels = captureDevice.WaveFormat.Channels == 1 ? "mono" : "stereo";
 
-        //    //return $"{deviceName} {sampleRate} {channels} {DateTime.Now:yyy-MM-dd HH-mm-ss}.wav";
-        //    return "test.wav";
-        //}
+            return $"{deviceName} {sampleRate} {channels} {DateTime.Now:yyy-MM-dd HH-mm-ss}.wav";
+            //return "test.wav";
+        }
 
         private void LoadWasapiDevicesCombo()
         {
@@ -102,12 +100,7 @@ namespace MTCAdapter_Mic
             comboWasapiDevices.DataSource = devices;
             comboWasapiDevices.DisplayMember = "FriendlyName";
 
-            //var renderDevices = deviceEnum.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active).ToList();
-            //comboWasapiLoopbackDevices.DataSource = renderDevices;
-            //comboWasapiLoopbackDevices.DisplayMember = "FriendlyName";
-
         }
-
         
 
         private IWaveIn CreateWaveInDevice()
@@ -125,6 +118,7 @@ namespace MTCAdapter_Mic
 
         void OnDataAvailable(object sender, WaveInEventArgs e)
         {
+
             if (InvokeRequired)
             {
                 //Debug.WriteLine("Data Available");
@@ -133,36 +127,18 @@ namespace MTCAdapter_Mic
             else
             {
                 //Debug.WriteLine("Flushing Data Available");
-
-                
-                for (int i=0; i<e.Buffer.Length; i++)
+                writer.Write(e.Buffer, 0, e.BytesRecorded);
+                int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);
+                if (secondsRecorded >= 30)
                 {
-                    if (i % 8 != 0)     // Mono but stereo buffer, so only one channel is selected.
-                        continue;
-
-                    byte[] tmp = new byte[4];
-                    for (int j = 0; j < 4; j++)
-                        tmp[j] = e.Buffer[i + j];
-
-                    signal_sum += BitConverter.ToSingle(tmp, 0);   // Calculate the sum
-                }             
-
-                //Debug.WriteLine("e buffer size={0}", e.Buffer.Length);
-                //Debug.WriteLine("signal_sum={0}", signal_sum);
-            
-
-
-
-                //int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);
-                //if (secondsRecorded >= 1)
-                //{
-                //    StopRecording();
-                //}
-                //else
-                //{
-                //    progressBar1.Value = secondsRecorded;
-                //}
+                    StopRecording();
+                }
+                else
+                {
+                    progressBar1.Value = secondsRecorded;
+                }
             }
+
         }
 
         
@@ -177,16 +153,14 @@ namespace MTCAdapter_Mic
 
         private void FinalizeWaveFile()
         {
-            //writer?.Dispose();
-            //writer = null;
+            writer?.Dispose();
+            writer = null;
         }
 
 
         private void button1_Click(object sender, EventArgs e)
         {
             Debug.WriteLine("buttonPlay clicked");
-
-
             runRecordWAV();
 
         }
@@ -205,15 +179,22 @@ namespace MTCAdapter_Mic
             var device = (MMDevice)comboWasapiDevices.SelectedItem;
             device.AudioEndpointVolume.Mute = false;
 
-
-
-            //outputFilename = GetFileName();
-            //writer = new WaveFileWriter(Path.Combine(outputFolder, outputFilename), captureDevice.WaveFormat);
+            outputFilename = GetFileName();
+            writer = new WaveFileWriter(Path.Combine(outputFolder, outputFilename), captureDevice.WaveFormat);
             captureDevice.StartRecording();
 
-            timer1.Start();
+            // Write MTConnect stethoscope
+            mAdapter.Begin();
+            audio_filename.Value = outputFilename;
+            mAdapter.SendChanged();
 
-            //SetControlStates(true);
+            // Remember starting point of MTConnect of Kuka robot
+            mKuka.readCurrentSeq(kukaCurrentUrl);
+            sec_start=mKuka.lastSeq;
+
+            //timer1.Start();   // Do not run timer when amplitude signals are not used.
+
+
         }
 
 
@@ -221,9 +202,15 @@ namespace MTCAdapter_Mic
         {
             Debug.WriteLine("Stopped Recording");
             captureDevice?.StopRecording();
-            signal_sum = 0;
+            //signal_sum = 0;
             Thread.Sleep(101);
-            timer1.Stop();
+            //timer1.Stop();
+
+            // Remember end point of MTConnect of Kuka robot
+            mKuka.readCurrentSeq(kukaCurrentUrl);
+            sec_end = mKuka.lastSeq;
+
+
         }
 
         private void buttonStopRecording_Click(object sender, EventArgs e)
@@ -240,128 +227,78 @@ namespace MTCAdapter_Mic
             else
             {
                 FinalizeWaveFile();
+                recordKukaCSV();
                 progressBar1.Value = 0;
                 if (e.Exception != null)
                 {
                     MessageBox.Show(String.Format("A problem was encountered during recording {0}",
                                                   e.Exception.Message));
                 }
-                //int newItemIndex = listBoxRecordings.Items.Add(outputFilename);
-                //listBoxRecordings.SelectedIndex = newItemIndex;
-                SetControlStates(false);
-                //runFFT();
-                //Debug.Write("Recoding+FFT stopped");
-                txtStatus.AppendText("Recoding stopped"); txtStatus.Update();
+                int newItemIndex = listBoxRecordings.Items.Add(outputFilename);
+                listBoxRecordings.SelectedIndex = newItemIndex;
+                SetControlStates(false);                
+                txtStatus.AppendText("Recoding stopped");
+                txtStatus.Update();
 
             }
         }
-
-        private void runFFT()
+        
+        /// <summary>
+        /// Record every value of KUKA robot until the recording is finished...
+        /// </summary>
+        private void recordKukaCSV()
         {
-            //// Prepare to read WAV file
-            ////System.IO.FileStream WaveFile = System.IO.File.OpenRead(Path.Combine(outputFolder, outputFilename));
-            //byte[] data = new byte[WaveFile.Length];
-            //WaveFile.Read(data, 0, Convert.ToInt32(WaveFile.Length));
-            //Debug.WriteLine("Wave length=", WaveFile.Length);
-            //List<byte> data_list = new List<byte>();
-            //data_list.AddRange(data);
-            //WaveFile.Close();
 
-            //// remove WAV header            
-            //List<byte> data_part = data_list.GetRange(58, data_list.Count - 58);
 
-            //// Read WAV data
-            //List<float> waves = new List<float>();  // final wave value
-            //for (int i = 0; i < data_part.Count; i = i + 8)
-            //{
-            //    byte[] tmp_l = data_part.GetRange(i, 4).ToArray();
-            //    float tmp_lf = BitConverter.ToSingle(tmp_l, 0);
-            //    byte[] tmp_r = data_part.GetRange(i + 4, 4).ToArray();
-            //    float tmp_rf = BitConverter.ToSingle(tmp_r, 0);
-            //    waves.Add(tmp_lf);  // Calculated both, but used one side
-            //}
+            string url = kukaBaseUrl + "/sample?from=" + sec_start + "&count=" + (sec_end-sec_start+1);
+            Debug.WriteLine(url);
 
-            //// WAVE data to complex value
-            //List<AForge.Math.Complex> waves_complex = new List<Complex>();
+            // read XML - MTConnect sample
+            mKuka.readPositionFromCurrent(kukaBaseUrl + "/current");    // To check positions 
+            mKuka.readFromSample(url);
 
-            //for (int i = 0; i < waves.Count; i++)
-            //{
-            //    Complex tmp;
-            //    tmp.Re = (double)waves.ElementAt(i);
-            //    tmp.Im = 0;
-            //    waves_complex.Add(tmp);
-            //}
+            // write to CSV
+            try
+            {
 
-            //const int length_FFT = 8192;
-            //List<AForge.Math.Complex> waves_complex_part = waves_complex.GetRange(0, length_FFT);
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(outputFilename + ".csv", false))  // do not append
+                {
 
-            //Complex[] results = waves_complex_part.ToArray();
+                    file.WriteLine("Seq,Timestamp,To_sec,name,value");
+                    for (int i = 0; i<6; i++)
+                    {
 
-            //// Perform FFT. results are saved in reasults itself...
-            //AForge.Math.FourierTransform.DFT(results, FourierTransform.Direction.Forward);
+                        foreach(MTCValue mMTCValue in mKuka.list_angles[i])
+                        {
+                            file.WriteLine(mMTCValue.idx + "," + mMTCValue.tStamp + "," + mMTCValue.toSec() + 
+                                "," + mMTCValue.name + "," + mMTCValue.value);
+                        }
+                        
+                    }
 
-            //// Save FFT results for debugging...
-            //using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"fft_result.csv", false))  // do not append
-            //{
-            //    for (int i = 0; i < waves_complex_part.Count; i++)
-            //    {
-            //        file.WriteLine("{0},{1}", waves.ElementAt(i).ToString(), results[i].Re);
-            //    }
-            //}
+                    for (int i = 0; i < 6; i++)
+                    {
 
-            //// Reverse the order of the positive freq. range
-            //List<XY_Signal> results_rev = new List<XY_Signal>();
-            //for (int i = length_FFT - 1; i >= length_FFT / 2; i--)
-            //{
-            //    double mag = Math.Sqrt(results[i].Re * results[i].Re + results[i].Im * results[i].Im);
-            //    //double freq = length_FFT / 2 / 44100.0 * (double)(length_FFT - i);
-            //    double freq = 44100/2* (double)(length_FFT - i)/ (length_FFT / 2);
-            //    results_rev.Add(new XY_Signal(freq, mag));
-            //}
+                        foreach (MTCValue mMTCValue in mKuka.list_torques[i])
+                        {
+                            file.WriteLine(mMTCValue.idx + "," + mMTCValue.tStamp + "," + mMTCValue.toSec() +
+                                "," + mMTCValue.name + "," + mMTCValue.value);
+                        }
 
-            //// Save FFT results for debugging...
-            //using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"fft_result_f.csv", false))  // do not append
-            //{
-            //    for (int i = 0; i < results_rev.Count; i++)
-            //    {
-            //        file.WriteLine("{0},{1},{2},{3}", results[length_FFT - 1 - i].Re, results[length_FFT - 1 - i].Im, results_rev[i].x, results_rev[i].y);
-            //    }
-            //}
+                    }
 
-            //int div_length = 20;
-            //double tmp_sum = 0;
-            //double[] tmp_FFT_value = new double[div_length];
-            //double[] tmp_FFT_time = new double[div_length];
 
-            //for (int i = 0; i < div_length; i++)
-            //{
-            //    mAdapter.Begin();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("{0} Exception caught at writing CSV.", e);
+            }
 
-            //    for (int j = i * results_rev.Count / div_length; j < (i + 1) * results_rev.Count / div_length; j++)
-            //    {
-            //        tmp_sum += results_rev[j].y;
-            //    }
-            //    tmp_FFT_time[i] = results_rev[i * results_rev.Count / div_length].x;
-            //    tmp_FFT_value[i] = tmp_sum / div_length;
-            //    tmp_sum = 0;
 
-            //}
 
-            //FFT_time.Values = tmp_FFT_time;
-            //FFT_ts.Values = tmp_FFT_value;
 
-            //mAdapter.AddDataItem(FFT_time);
-            //mAdapter.AddDataItem(FFT_ts);
-            //mAdapter.SendChanged();
-
-            // FFT finished...
-            Debug.WriteLine("FFT analysis finished");
         }
-        private void btnFFT_Click(object sender, EventArgs e)
-        {
-            //runFFT();
-        }
-
         private void btnMTConnect_Click(object sender, EventArgs e)
         {
             // Start MTConnect agent
@@ -377,70 +314,24 @@ namespace MTCAdapter_Mic
                 btnMTConnect.Text = "Connect MTC";
                 isMTconnected = false;
             }
-            
-
-
-
-        }
-
-        private void textInterval_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                runInterval = Convert.ToDouble(textInterval.Text);
-                timer1.Interval = (int) runInterval * 1000;
-            }
-        }
-
-        private void btnAutoGathering_Click(object sender, EventArgs e)
-        {
-            //if(isAuto)
-            //{
-            //    isAuto = false;
-            //    // timer off
-            //    signal_sum = 0;
-            //    Thread.Sleep(101);
-            //    timer1.Stop();
-            //    btnAutoGathering.Text = "Start Auto";
-            //    btnAutoGathering.Update();
-            //} 
-            //else
-            //{
-            //    btnAutoGathering.Text = "Stop Auto";
-            //    btnAutoGathering.Update();
-            //    // timer start
-            //    timer1.Start();
-                
-            //}
-            
-
-        }
+        }     
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-
-            mAdapter.Begin();
-            sample_signal_sum.Value = Math.Abs(signal_sum);
-
-            mAdapter.AddDataItem(sample_signal_sum);
-            //mAdapter.AddDataItem(FFT_ts);
-            mAdapter.SendChanged();
-            Debug.WriteLine("[timer1_tick()] signal_sum=" + signal_sum);
-            signal_sum = 0;
             
-            
-            //runRecordWAV();
-            //Debug.Write("Recoding+FFT started");
-            //txtStatus.AppendText("Recoding+FFT started"); txtStatus.Update();
-            //btnStartRecording.PerformClick();
-
-
-
-
-
         }
 
         private void listBoxRecordings_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textInterval_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void comboWasapiDevices_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }

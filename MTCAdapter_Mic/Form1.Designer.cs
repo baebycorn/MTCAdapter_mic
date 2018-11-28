@@ -36,15 +36,12 @@
             this.buttonStopRecording = new System.Windows.Forms.Button();
             this.comboBoxSampleRate = new System.Windows.Forms.ComboBox();
             this.comboBoxChannels = new System.Windows.Forms.ComboBox();
-            this.btnFFT = new System.Windows.Forms.Button();
             this.btnMTConnect = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.listBoxRecordings = new System.Windows.Forms.ListBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.textInterval = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
             this.txtStatus = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.groupBox1.SuspendLayout();
@@ -58,6 +55,7 @@
             this.comboWasapiDevices.Name = "comboWasapiDevices";
             this.comboWasapiDevices.Size = new System.Drawing.Size(189, 21);
             this.comboWasapiDevices.TabIndex = 0;
+            this.comboWasapiDevices.SelectedIndexChanged += new System.EventHandler(this.comboWasapiDevices_SelectedIndexChanged);
             // 
             // label1
             // 
@@ -81,7 +79,7 @@
             // progressBar1
             // 
             this.progressBar1.Location = new System.Drawing.Point(16, 153);
-            this.progressBar1.Maximum = 10;
+            this.progressBar1.Maximum = 30;
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(266, 13);
             this.progressBar1.Step = 1;
@@ -115,16 +113,6 @@
             this.comboBoxChannels.Size = new System.Drawing.Size(121, 21);
             this.comboBoxChannels.TabIndex = 9;
             // 
-            // btnFFT
-            // 
-            this.btnFFT.Location = new System.Drawing.Point(93, 215);
-            this.btnFFT.Name = "btnFFT";
-            this.btnFFT.Size = new System.Drawing.Size(102, 29);
-            this.btnFFT.TabIndex = 10;
-            this.btnFFT.Text = "FFT analysis";
-            this.btnFFT.UseVisualStyleBackColor = true;
-            this.btnFFT.Click += new System.EventHandler(this.btnFFT_Click);
-            // 
             // btnMTConnect
             // 
             this.btnMTConnect.Location = new System.Drawing.Point(16, 23);
@@ -139,7 +127,6 @@
             // 
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Controls.Add(this.btnFFT);
             this.groupBox1.Controls.Add(this.comboBoxSampleRate);
             this.groupBox1.Controls.Add(this.comboWasapiDevices);
             this.groupBox1.Controls.Add(this.label1);
@@ -178,14 +165,12 @@
             this.listBoxRecordings.FormattingEnabled = true;
             this.listBoxRecordings.Location = new System.Drawing.Point(16, 172);
             this.listBoxRecordings.Name = "listBoxRecordings";
-            this.listBoxRecordings.Size = new System.Drawing.Size(266, 30);
+            this.listBoxRecordings.Size = new System.Drawing.Size(266, 69);
             this.listBoxRecordings.TabIndex = 6;
             this.listBoxRecordings.SelectedIndexChanged += new System.EventHandler(this.listBoxRecordings_SelectedIndexChanged);
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.textInterval);
-            this.groupBox2.Controls.Add(this.label4);
             this.groupBox2.Controls.Add(this.btnMTConnect);
             this.groupBox2.Location = new System.Drawing.Point(352, 32);
             this.groupBox2.Name = "groupBox2";
@@ -193,24 +178,6 @@
             this.groupBox2.TabIndex = 13;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "MTConnect adapter";
-            // 
-            // textInterval
-            // 
-            this.textInterval.Location = new System.Drawing.Point(151, 66);
-            this.textInterval.Name = "textInterval";
-            this.textInterval.Size = new System.Drawing.Size(98, 20);
-            this.textInterval.TabIndex = 13;
-            this.textInterval.Text = "100";
-            this.textInterval.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textInterval_KeyDown);
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(13, 71);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(117, 13);
-            this.label4.TabIndex = 12;
-            this.label4.Text = "Gathering Interval (sec)";
             // 
             // txtStatus
             // 
@@ -241,7 +208,6 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -256,15 +222,12 @@
         private System.Windows.Forms.Button buttonStopRecording;
         private System.Windows.Forms.ComboBox comboBoxSampleRate;
         private System.Windows.Forms.ComboBox comboBoxChannels;
-        private System.Windows.Forms.Button btnFFT;
         private System.Windows.Forms.Button btnMTConnect;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.ListBox listBoxRecordings;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.TextBox textInterval;
-        private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox txtStatus;
         private System.Windows.Forms.Timer timer1;
     }
