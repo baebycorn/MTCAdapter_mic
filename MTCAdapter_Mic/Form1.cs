@@ -13,7 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using AForge.Math;
+
 using MTConnect;
 using System.Threading;
 using XMLGathering;
@@ -161,6 +161,9 @@ namespace MTCAdapter_Mic
         private void button1_Click(object sender, EventArgs e)
         {
             Debug.WriteLine("buttonPlay clicked");
+            txtStatus.AppendText("Recoding started\n");
+            txtStatus.Update();
+
             runRecordWAV();
 
         }
@@ -237,7 +240,7 @@ namespace MTCAdapter_Mic
                 int newItemIndex = listBoxRecordings.Items.Add(outputFilename);
                 listBoxRecordings.SelectedIndex = newItemIndex;
                 SetControlStates(false);                
-                txtStatus.AppendText("Recoding stopped");
+                txtStatus.AppendText("Recoding stopped\n");
                 txtStatus.Update();
 
             }
