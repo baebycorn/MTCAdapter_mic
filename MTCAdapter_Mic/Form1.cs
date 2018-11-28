@@ -13,31 +13,35 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-
 using MTConnect;
 using System.Threading;
 using XMLGathering;
 
-
 // 8000, Mono
 // 10sec = 3535114 bytes
-
-
-
 
 namespace MTCAdapter_Mic
 {
     public partial class MicAdapter : Form
     {
+        
+        // Mic devices
+        private IWaveIn captureDevice;
+        private IWaveIn captureDevice2;
+
+        private WaveFileWriter writer;
+        private WaveFileWriter writer2;
+
+        private string outputFilename;
+        private string outputFilename2;
+
+        private readonly string outputFolder;
+
+
+        // MTConnect - common
         private const int MTC_port_num = 7877;
         private bool isMTconnected = false;
 
-        private IWaveIn captureDevice;
-        private WaveFileWriter writer;
-        private string outputFilename;
-        private readonly string outputFolder;
-
-        
         // MTConnect - writing stethoscope
         Adapter mAdapter = new Adapter();        
         MTConnect.Sample sample_signal_sum = new Sample("audio_signal1");
@@ -49,9 +53,6 @@ namespace MTCAdapter_Mic
         static String kukaCurrentUrl = kukaBaseUrl + "/current";
         int sec_start = 0;
         int sec_end = 0;
-
-
-
 
         // Auto calculation
         private double runInterval = 0.2; // timer1 loop (sec)       
@@ -92,13 +93,31 @@ namespace MTCAdapter_Mic
             //return "test.wav";
         }
 
+        private string GetFileName2()
+        {
+            var deviceName = captureDevice2.GetType().Name;
+            var sampleRate = $"{captureDevice2.WaveFormat.SampleRate / 1000}kHz";
+            var channels = captureDevice2.WaveFormat.Channels == 1 ? "mono" : "stereo";
+
+            return $"{deviceName}2 {sampleRate} {channels} {DateTime.Now:yyy-MM-dd HH-mm-ss}.wav";
+            //return "test.wav";
+        }
+
+
+
         private void LoadWasapiDevicesCombo()
         {
             var deviceEnum = new MMDeviceEnumerator();
             var devices = deviceEnum.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).ToList();
 
+            var deviceEnum2 = new MMDeviceEnumerator();
+            var devices2 = deviceEnum2.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).ToList();
+
             comboWasapiDevices.DataSource = devices;
             comboWasapiDevices.DisplayMember = "FriendlyName";
+
+            comboWasapiDevices2.DataSource = devices2;
+            comboWasapiDevices2.DisplayMember = "FriendlyName";
 
         }
         
@@ -115,6 +134,20 @@ namespace MTCAdapter_Mic
             newWaveIn.RecordingStopped += OnRecordingStopped;
             return newWaveIn;
         }
+
+        private IWaveIn CreateWaveInDevice2()
+        {
+            IWaveIn newWaveIn;
+
+            // can't set WaveFormat as WASAPI doesn't support SRC
+            var device = (MMDevice)comboWasapiDevices2.SelectedItem;
+            newWaveIn = new WasapiCapture(device);
+
+            newWaveIn.DataAvailable += OnDataAvailable2;
+            newWaveIn.RecordingStopped += OnRecordingStopped;
+            return newWaveIn;
+        }
+
 
         void OnDataAvailable(object sender, WaveInEventArgs e)
         {
@@ -141,7 +174,32 @@ namespace MTCAdapter_Mic
 
         }
 
-        
+
+        void OnDataAvailable2(object sender, WaveInEventArgs e)
+        {
+
+            if (InvokeRequired)
+            {
+                //Debug.WriteLine("Data Available");
+                BeginInvoke(new EventHandler<WaveInEventArgs>(OnDataAvailable2), sender, e);
+            }
+            else
+            {
+                //Debug.WriteLine("Flushing Data Available");
+                writer2.Write(e.Buffer, 0, e.BytesRecorded);
+                int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);
+                if (secondsRecorded >= 30)
+                {
+                    StopRecording();
+                }
+                else
+                {
+                    progressBar1.Value = secondsRecorded;
+                }
+            }
+
+        }
+
 
         private void SetControlStates(bool isRecording)
         {
@@ -155,14 +213,14 @@ namespace MTCAdapter_Mic
         {
             writer?.Dispose();
             writer = null;
+            writer2?.Dispose();
+            writer2 = null;
         }
 
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Debug.WriteLine("buttonPlay clicked");
-            txtStatus.AppendText("Recoding started\n");
-            txtStatus.Update();
+            Debug.WriteLine("buttonPlay clicked");          
 
             runRecordWAV();
 
@@ -171,20 +229,34 @@ namespace MTCAdapter_Mic
         private void runRecordWAV()
         {
             SetControlStates(true);
-            captureDevice = CreateWaveInDevice();
-            //if (captureDevice == null)
-            //{
-            //    captureDevice = CreateWaveInDevice();
 
-            //}
+            if(comboWasapiDevices.Text == comboWasapiDevices2.Text)
+            {
+                MessageBox.Show("Choosed the same devices. Try different devices.");
+                SetControlStates(false);
+                return;
+            }            
 
-            // Forcibly turn on the microphone (some programs (Skype) turn it off).
-            var device = (MMDevice)comboWasapiDevices.SelectedItem;
+            captureDevice = CreateWaveInDevice();                        
+            var device = (MMDevice)comboWasapiDevices.SelectedItem; // Forcibly turn on the microphone (some programs (Skype) turn it off).
             device.AudioEndpointVolume.Mute = false;
-
-            outputFilename = GetFileName();
-            writer = new WaveFileWriter(Path.Combine(outputFolder, outputFilename), captureDevice.WaveFormat);
+            outputFilename = GetFileName();            
+            writer = new WaveFileWriter(Path.Combine(outputFolder, outputFilename), captureDevice.WaveFormat);            
             captureDevice.StartRecording();
+
+
+            if(chk2ndAvail.Checked)
+            {
+                captureDevice2 = CreateWaveInDevice2();
+                var device2 = (MMDevice)comboWasapiDevices2.SelectedItem; // Forcibly turn on the microphone (some programs (Skype) turn it off).
+                device2.AudioEndpointVolume.Mute = false;
+                outputFilename2 = GetFileName2();
+                writer2 = new WaveFileWriter(Path.Combine(outputFolder, outputFilename2), captureDevice2.WaveFormat);
+                captureDevice2.StartRecording();
+            }
+
+            txtStatus.AppendText("Recoding started\n");
+            txtStatus.Update();
 
             // Write MTConnect stethoscope
             mAdapter.Begin();
@@ -205,6 +277,7 @@ namespace MTCAdapter_Mic
         {
             Debug.WriteLine("Stopped Recording");
             captureDevice?.StopRecording();
+            captureDevice2?.StopRecording();
             //signal_sum = 0;
             Thread.Sleep(101);
             //timer1.Stop();
@@ -218,6 +291,7 @@ namespace MTCAdapter_Mic
 
         private void buttonStopRecording_Click(object sender, EventArgs e)
         {
+            recordKukaCSV();
             StopRecording();
         }
 
@@ -229,15 +303,14 @@ namespace MTCAdapter_Mic
             }
             else
             {
-                FinalizeWaveFile();
-                recordKukaCSV();
+                FinalizeWaveFile();                
                 progressBar1.Value = 0;
                 if (e.Exception != null)
                 {
                     MessageBox.Show(String.Format("A problem was encountered during recording {0}",
                                                   e.Exception.Message));
                 }
-                int newItemIndex = listBoxRecordings.Items.Add(outputFilename);
+                int newItemIndex = listBoxRecordings.Items.Add(outputFilename);                
                 listBoxRecordings.SelectedIndex = newItemIndex;
                 SetControlStates(false);                
                 txtStatus.AppendText("Recoding stopped\n");
@@ -335,6 +408,16 @@ namespace MTCAdapter_Mic
         }
 
         private void comboWasapiDevices_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void MicAdapter_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void comboWasapiDevices2_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }

@@ -44,6 +44,9 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.txtStatus = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.label4 = new System.Windows.Forms.Label();
+            this.comboWasapiDevices2 = new System.Windows.Forms.ComboBox();
+            this.chk2ndAvail = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -51,7 +54,7 @@
             // comboWasapiDevices
             // 
             this.comboWasapiDevices.FormattingEnabled = true;
-            this.comboWasapiDevices.Location = new System.Drawing.Point(93, 30);
+            this.comboWasapiDevices.Location = new System.Drawing.Point(19, 38);
             this.comboWasapiDevices.Name = "comboWasapiDevices";
             this.comboWasapiDevices.Size = new System.Drawing.Size(189, 21);
             this.comboWasapiDevices.TabIndex = 0;
@@ -60,7 +63,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(16, 35);
+            this.label1.Location = new System.Drawing.Point(16, 22);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(66, 13);
             this.label1.TabIndex = 2;
@@ -68,7 +71,7 @@
             // 
             // btnStartRecording
             // 
-            this.btnStartRecording.Location = new System.Drawing.Point(32, 111);
+            this.btnStartRecording.Location = new System.Drawing.Point(32, 186);
             this.btnStartRecording.Name = "btnStartRecording";
             this.btnStartRecording.Size = new System.Drawing.Size(105, 29);
             this.btnStartRecording.TabIndex = 4;
@@ -78,7 +81,7 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(16, 153);
+            this.progressBar1.Location = new System.Drawing.Point(16, 228);
             this.progressBar1.Maximum = 30;
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(266, 13);
@@ -87,7 +90,7 @@
             // 
             // buttonStopRecording
             // 
-            this.buttonStopRecording.Location = new System.Drawing.Point(160, 111);
+            this.buttonStopRecording.Location = new System.Drawing.Point(160, 186);
             this.buttonStopRecording.Name = "buttonStopRecording";
             this.buttonStopRecording.Size = new System.Drawing.Size(94, 29);
             this.buttonStopRecording.TabIndex = 7;
@@ -99,7 +102,7 @@
             // 
             this.comboBoxSampleRate.Enabled = false;
             this.comboBoxSampleRate.FormattingEnabled = true;
-            this.comboBoxSampleRate.Location = new System.Drawing.Point(16, 75);
+            this.comboBoxSampleRate.Location = new System.Drawing.Point(16, 150);
             this.comboBoxSampleRate.Name = "comboBoxSampleRate";
             this.comboBoxSampleRate.Size = new System.Drawing.Size(121, 21);
             this.comboBoxSampleRate.TabIndex = 8;
@@ -108,7 +111,7 @@
             // 
             this.comboBoxChannels.Enabled = false;
             this.comboBoxChannels.FormattingEnabled = true;
-            this.comboBoxChannels.Location = new System.Drawing.Point(143, 75);
+            this.comboBoxChannels.Location = new System.Drawing.Point(143, 150);
             this.comboBoxChannels.Name = "comboBoxChannels";
             this.comboBoxChannels.Size = new System.Drawing.Size(121, 21);
             this.comboBoxChannels.TabIndex = 9;
@@ -125,6 +128,9 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.chk2ndAvail);
+            this.groupBox1.Controls.Add(this.comboWasapiDevices2);
+            this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.comboBoxSampleRate);
@@ -137,7 +143,7 @@
             this.groupBox1.Controls.Add(this.progressBar1);
             this.groupBox1.Location = new System.Drawing.Point(28, 25);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(297, 256);
+            this.groupBox1.Size = new System.Drawing.Size(297, 336);
             this.groupBox1.TabIndex = 12;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Manual recording";
@@ -145,7 +151,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(157, 59);
+            this.label3.Location = new System.Drawing.Point(157, 134);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(76, 13);
             this.label3.TabIndex = 11;
@@ -154,7 +160,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(40, 59);
+            this.label2.Location = new System.Drawing.Point(40, 134);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(52, 13);
             this.label2.TabIndex = 10;
@@ -163,7 +169,7 @@
             // listBoxRecordings
             // 
             this.listBoxRecordings.FormattingEnabled = true;
-            this.listBoxRecordings.Location = new System.Drawing.Point(16, 172);
+            this.listBoxRecordings.Location = new System.Drawing.Point(16, 247);
             this.listBoxRecordings.Name = "listBoxRecordings";
             this.listBoxRecordings.Size = new System.Drawing.Size(266, 69);
             this.listBoxRecordings.TabIndex = 6;
@@ -174,7 +180,7 @@
             this.groupBox2.Controls.Add(this.btnMTConnect);
             this.groupBox2.Location = new System.Drawing.Point(352, 32);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(265, 248);
+            this.groupBox2.Size = new System.Drawing.Size(265, 329);
             this.groupBox2.TabIndex = 13;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "MTConnect adapter";
@@ -182,7 +188,7 @@
             // txtStatus
             // 
             this.txtStatus.AcceptsReturn = true;
-            this.txtStatus.Location = new System.Drawing.Point(28, 296);
+            this.txtStatus.Location = new System.Drawing.Point(28, 381);
             this.txtStatus.Multiline = true;
             this.txtStatus.Name = "txtStatus";
             this.txtStatus.ReadOnly = true;
@@ -195,16 +201,47 @@
             this.timer1.Interval = 10000;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(16, 74);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(82, 13);
+            this.label4.TabIndex = 12;
+            this.label4.Text = "Input source #2";
+            // 
+            // comboWasapiDevices2
+            // 
+            this.comboWasapiDevices2.FormattingEnabled = true;
+            this.comboWasapiDevices2.Location = new System.Drawing.Point(19, 90);
+            this.comboWasapiDevices2.Name = "comboWasapiDevices2";
+            this.comboWasapiDevices2.Size = new System.Drawing.Size(189, 21);
+            this.comboWasapiDevices2.TabIndex = 13;
+            this.comboWasapiDevices2.SelectedIndexChanged += new System.EventHandler(this.comboWasapiDevices2_SelectedIndexChanged);
+            // 
+            // chk2ndAvail
+            // 
+            this.chk2ndAvail.AutoSize = true;
+            this.chk2ndAvail.Checked = true;
+            this.chk2ndAvail.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chk2ndAvail.Location = new System.Drawing.Point(213, 92);
+            this.chk2ndAvail.Name = "chk2ndAvail";
+            this.chk2ndAvail.Size = new System.Drawing.Size(69, 17);
+            this.chk2ndAvail.TabIndex = 14;
+            this.chk2ndAvail.Text = "Available";
+            this.chk2ndAvail.UseVisualStyleBackColor = true;
+            // 
             // MicAdapter
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(647, 450);
+            this.ClientSize = new System.Drawing.Size(634, 533);
             this.Controls.Add(this.txtStatus);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Name = "MicAdapter";
             this.Text = "MTConnect adapter - microphone";
+            this.Load += new System.EventHandler(this.MicAdapter_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
@@ -230,6 +267,9 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.TextBox txtStatus;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.CheckBox chk2ndAvail;
+        private System.Windows.Forms.ComboBox comboWasapiDevices2;
+        private System.Windows.Forms.Label label4;
     }
 }
 
