@@ -17,6 +17,9 @@ using MTConnect;
 using System.Threading;
 using XMLGathering;
 
+using MTC_adapter_daq;
+
+
 // 8000, Mono
 // 10sec = 3535114 bytes
 
@@ -35,8 +38,14 @@ namespace MTCAdapter_Mic
         private string outputFilename;
         private string outputFilename2;
 
-        private readonly string outputFolder;
+        private string outputFolder;
+        private string baseFolder;
 
+
+        // NI DAQ device
+        private DAQHandler daq;
+        private const int samplingRate = 1000;
+        private const int samplingSec = 30;
 
         // MTConnect - common
         private const int MTC_port_num = 7877;
@@ -58,6 +67,9 @@ namespace MTCAdapter_Mic
         private double runInterval = 0.2; // timer1 loop (sec)       
 
 
+        // Folder numbering
+        private static int folderNum = 1;
+
 
 
         public MicAdapter()
@@ -75,11 +87,12 @@ namespace MTCAdapter_Mic
             comboBoxChannels.DataSource = new[] { "Mono", "Stereo" };
             comboBoxChannels.SelectedIndex = 0;
             outputFolder = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
-            outputFolder = Directory.GetCurrentDirectory();
-            Directory.CreateDirectory(outputFolder);
+            baseFolder = Directory.GetCurrentDirectory();
+            outputFolder = baseFolder + "/" + folderNum;
+            //Directory.CreateDirectory(outputFolder);
             //outputFilename = GetFileName();
 
-            timer1.Interval = (int)(runInterval * 1000);  
+            //timer1.Interval = (int)(runInterval * 1000);  
 
         }
 
@@ -144,7 +157,7 @@ namespace MTCAdapter_Mic
             newWaveIn = new WasapiCapture(device);
 
             newWaveIn.DataAvailable += OnDataAvailable2;
-            newWaveIn.RecordingStopped += OnRecordingStopped;
+            newWaveIn.RecordingStopped += OnRecordingStopped2;
             return newWaveIn;
         }
 
@@ -160,16 +173,20 @@ namespace MTCAdapter_Mic
             else
             {
                 //Debug.WriteLine("Flushing Data Available");
-                writer.Write(e.Buffer, 0, e.BytesRecorded);
-                int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);
-                if (secondsRecorded >= 30)
+                if (writer != null)
                 {
-                    StopRecording();
+                    writer.Write(e.Buffer, 0, e.BytesRecorded);
+                    int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);
+                    if (secondsRecorded >= 30)
+                    {
+                        StopRecording();
+                    }
+                    else
+                    {
+                        progressBar1.Value = secondsRecorded;
+                    }
                 }
-                else
-                {
-                    progressBar1.Value = secondsRecorded;
-                }
+                
             }
 
         }
@@ -186,16 +203,20 @@ namespace MTCAdapter_Mic
             else
             {
                 //Debug.WriteLine("Flushing Data Available");
-                writer2.Write(e.Buffer, 0, e.BytesRecorded);
-                int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);
-                if (secondsRecorded >= 30)
+                if(writer2!=null)
                 {
-                    StopRecording();
+                    writer2.Write(e.Buffer, 0, e.BytesRecorded);
+                    int secondsRecorded = (int)(writer2.Length / writer.WaveFormat.AverageBytesPerSecond);
+                    if (secondsRecorded >= 30)
+                    {
+                        StopRecording();
+                    }
+                    else
+                    {
+                        progressBar1.Value = secondsRecorded;
+                    }
                 }
-                else
-                {
-                    progressBar1.Value = secondsRecorded;
-                }
+                    
             }
 
         }
@@ -211,18 +232,21 @@ namespace MTCAdapter_Mic
 
         private void FinalizeWaveFile()
         {
-            writer?.Dispose();
-            writer = null;
-            writer2?.Dispose();
-            writer2 = null;
+            
+            
         }
 
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Debug.WriteLine("buttonPlay clicked");          
+            Directory.CreateDirectory(outputFolder);
 
+            Debug.WriteLine("Starting Mic acquisition..");
             runRecordWAV();
+
+
+            Debug.WriteLine("Starting DAQ acquisition..");
+            daq = new DAQHandler(samplingRate);            
 
         }
 
@@ -251,7 +275,7 @@ namespace MTCAdapter_Mic
                 var device2 = (MMDevice)comboWasapiDevices2.SelectedItem; // Forcibly turn on the microphone (some programs (Skype) turn it off).
                 device2.AudioEndpointVolume.Mute = false;
                 outputFilename2 = GetFileName2();
-                writer2 = new WaveFileWriter(Path.Combine(outputFolder, outputFilename2), captureDevice2.WaveFormat);
+                writer2 = new WaveFileWriter(Path.Combine(outputFolder, outputFilename2), captureDevice2.WaveFormat);                
                 captureDevice2.StartRecording();
             }
 
@@ -275,7 +299,7 @@ namespace MTCAdapter_Mic
 
         void StopRecording()
         {
-            Debug.WriteLine("Stopped Recording");
+            Debug.WriteLine("StopRecoding() called..");
             captureDevice?.StopRecording();
             captureDevice2?.StopRecording();
             //signal_sum = 0;
@@ -286,24 +310,48 @@ namespace MTCAdapter_Mic
             mKuka.readCurrentSeq(kukaCurrentUrl);
             sec_end = mKuka.lastSeq;
 
-
         }
 
         private void buttonStopRecording_Click(object sender, EventArgs e)
         {
-            recordKukaCSV();
+
+            Debug.WriteLine("Stop recoding clicked..");
+
+            Debug.WriteLine("Saving mic..");            
+            
             StopRecording();
+
+            recordKukaCSV();
+
+
+            Debug.WriteLine("Saving DAQ..");
+            //daq.measureDAQ();
+            daq.stopDAQ();
+
+            string fileName = outputFilename;
+            fileName = fileName.Remove(fileName.Length - 3, 3);
+            fileName += "xml";
+            daq.saveDataToExcel(Path.Combine(outputFolder, fileName));
+
+
+            folderNum++;
+            outputFolder = baseFolder + "/" + folderNum;
+            
+
         }
 
         void OnRecordingStopped(object sender, StoppedEventArgs e)
         {
+            Debug.WriteLine("OnRecordingStopped() called");
             if (InvokeRequired)
             {
                 BeginInvoke(new EventHandler<StoppedEventArgs>(OnRecordingStopped), sender, e);
             }
             else
             {
-                FinalizeWaveFile();                
+                writer?.Dispose();
+                writer = null;
+
                 progressBar1.Value = 0;
                 if (e.Exception != null)
                 {
@@ -315,10 +363,37 @@ namespace MTCAdapter_Mic
                 SetControlStates(false);                
                 txtStatus.AppendText("Recoding stopped\n");
                 txtStatus.Update();
-
             }
         }
-        
+
+
+        void OnRecordingStopped2(object sender, StoppedEventArgs e)
+        {
+            Debug.WriteLine("OnRecordingStopped2() called");
+            if (InvokeRequired)
+            {
+                BeginInvoke(new EventHandler<StoppedEventArgs>(OnRecordingStopped2), sender, e);
+            }
+            else
+            {
+                writer2?.Dispose();
+                writer2 = null;                
+                
+                if (e.Exception != null)
+                {
+                    MessageBox.Show(String.Format("A problem was encountered during recording {0}",
+                                                  e.Exception.Message));
+                }
+
+                int newItemIndex = listBoxRecordings.Items.Add(outputFilename2);
+                listBoxRecordings.SelectedIndex = newItemIndex;
+                
+                txtStatus.AppendText("Recoding2 stopped\n");
+                txtStatus.Update();
+            }
+        }
+
+
         /// <summary>
         /// Record every value of KUKA robot until the recording is finished...
         /// </summary>
@@ -337,7 +412,7 @@ namespace MTCAdapter_Mic
             try
             {
 
-                using (System.IO.StreamWriter file = new System.IO.StreamWriter(outputFilename + ".csv", false))  // do not append
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(Path.Combine(outputFolder, outputFilename + ".csv"), false))  // do not append
                 {
 
                     file.WriteLine("Seq,Timestamp,To_sec,name,value");
@@ -394,6 +469,9 @@ namespace MTCAdapter_Mic
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            Debug.WriteLine("timer1 called");
+            
+
             
         }
 
@@ -420,6 +498,13 @@ namespace MTCAdapter_Mic
         private void comboWasapiDevices2_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void timer2_Tick(object sender, EventArgs e)
+        {
+            Debug.WriteLine("timer2 called");            
+            
+            
         }
     }
 }

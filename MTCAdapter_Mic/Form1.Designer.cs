@@ -38,15 +38,16 @@
             this.comboBoxChannels = new System.Windows.Forms.ComboBox();
             this.btnMTConnect = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.chk2ndAvail = new System.Windows.Forms.CheckBox();
+            this.comboWasapiDevices2 = new System.Windows.Forms.ComboBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.listBoxRecordings = new System.Windows.Forms.ListBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.txtStatus = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.label4 = new System.Windows.Forms.Label();
-            this.comboWasapiDevices2 = new System.Windows.Forms.ComboBox();
-            this.chk2ndAvail = new System.Windows.Forms.CheckBox();
+            this.timer2 = new System.Windows.Forms.Timer(this.components);
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -148,6 +149,36 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Manual recording";
             // 
+            // chk2ndAvail
+            // 
+            this.chk2ndAvail.AutoSize = true;
+            this.chk2ndAvail.Checked = true;
+            this.chk2ndAvail.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chk2ndAvail.Location = new System.Drawing.Point(213, 92);
+            this.chk2ndAvail.Name = "chk2ndAvail";
+            this.chk2ndAvail.Size = new System.Drawing.Size(69, 17);
+            this.chk2ndAvail.TabIndex = 14;
+            this.chk2ndAvail.Text = "Available";
+            this.chk2ndAvail.UseVisualStyleBackColor = true;
+            // 
+            // comboWasapiDevices2
+            // 
+            this.comboWasapiDevices2.FormattingEnabled = true;
+            this.comboWasapiDevices2.Location = new System.Drawing.Point(19, 90);
+            this.comboWasapiDevices2.Name = "comboWasapiDevices2";
+            this.comboWasapiDevices2.Size = new System.Drawing.Size(189, 21);
+            this.comboWasapiDevices2.TabIndex = 13;
+            this.comboWasapiDevices2.SelectedIndexChanged += new System.EventHandler(this.comboWasapiDevices2_SelectedIndexChanged);
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(16, 74);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(82, 13);
+            this.label4.TabIndex = 12;
+            this.label4.Text = "Input source #2";
+            // 
             // label3
             // 
             this.label3.AutoSize = true;
@@ -198,38 +229,13 @@
             // 
             // timer1
             // 
-            this.timer1.Interval = 10000;
+            this.timer1.Interval = 30000;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
-            // label4
+            // timer2
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(16, 74);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(82, 13);
-            this.label4.TabIndex = 12;
-            this.label4.Text = "Input source #2";
-            // 
-            // comboWasapiDevices2
-            // 
-            this.comboWasapiDevices2.FormattingEnabled = true;
-            this.comboWasapiDevices2.Location = new System.Drawing.Point(19, 90);
-            this.comboWasapiDevices2.Name = "comboWasapiDevices2";
-            this.comboWasapiDevices2.Size = new System.Drawing.Size(189, 21);
-            this.comboWasapiDevices2.TabIndex = 13;
-            this.comboWasapiDevices2.SelectedIndexChanged += new System.EventHandler(this.comboWasapiDevices2_SelectedIndexChanged);
-            // 
-            // chk2ndAvail
-            // 
-            this.chk2ndAvail.AutoSize = true;
-            this.chk2ndAvail.Checked = true;
-            this.chk2ndAvail.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chk2ndAvail.Location = new System.Drawing.Point(213, 92);
-            this.chk2ndAvail.Name = "chk2ndAvail";
-            this.chk2ndAvail.Size = new System.Drawing.Size(69, 17);
-            this.chk2ndAvail.TabIndex = 14;
-            this.chk2ndAvail.Text = "Available";
-            this.chk2ndAvail.UseVisualStyleBackColor = true;
+            this.timer2.Interval = 30000;
+            this.timer2.Tick += new System.EventHandler(this.timer2_Tick);
             // 
             // MicAdapter
             // 
@@ -270,6 +276,7 @@
         private System.Windows.Forms.CheckBox chk2ndAvail;
         private System.Windows.Forms.ComboBox comboWasapiDevices2;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Timer timer2;
     }
 }
 
