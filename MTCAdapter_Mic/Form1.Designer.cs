@@ -38,9 +38,11 @@
             this.comboBoxChannels = new System.Windows.Forms.ComboBox();
             this.btnMTConnect = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.chk2ndAvail = new System.Windows.Forms.CheckBox();
             this.comboWasapiDevices2 = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.listBoxRecordings = new System.Windows.Forms.ListBox();
@@ -48,7 +50,10 @@
             this.txtStatus = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.timer2 = new System.Windows.Forms.Timer(this.components);
+            this.label6 = new System.Windows.Forms.Label();
+            this.textBoxMaxDivisor = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -72,7 +77,7 @@
             // 
             // btnStartRecording
             // 
-            this.btnStartRecording.Location = new System.Drawing.Point(32, 186);
+            this.btnStartRecording.Location = new System.Drawing.Point(32, 264);
             this.btnStartRecording.Name = "btnStartRecording";
             this.btnStartRecording.Size = new System.Drawing.Size(105, 29);
             this.btnStartRecording.TabIndex = 4;
@@ -82,8 +87,8 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(16, 228);
-            this.progressBar1.Maximum = 30;
+            this.progressBar1.Location = new System.Drawing.Point(19, 299);
+            this.progressBar1.Maximum = 60;
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(266, 13);
             this.progressBar1.Step = 1;
@@ -91,7 +96,7 @@
             // 
             // buttonStopRecording
             // 
-            this.buttonStopRecording.Location = new System.Drawing.Point(160, 186);
+            this.buttonStopRecording.Location = new System.Drawing.Point(160, 264);
             this.buttonStopRecording.Name = "buttonStopRecording";
             this.buttonStopRecording.Size = new System.Drawing.Size(94, 29);
             this.buttonStopRecording.TabIndex = 7;
@@ -129,25 +134,52 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.textBoxMaxDivisor);
+            this.groupBox1.Controls.Add(this.buttonStopRecording);
+            this.groupBox1.Controls.Add(this.numericUpDown1);
             this.groupBox1.Controls.Add(this.chk2ndAvail);
             this.groupBox1.Controls.Add(this.comboWasapiDevices2);
             this.groupBox1.Controls.Add(this.label4);
+            this.groupBox1.Controls.Add(this.label6);
+            this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.comboBoxSampleRate);
             this.groupBox1.Controls.Add(this.comboWasapiDevices);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.comboBoxChannels);
-            this.groupBox1.Controls.Add(this.buttonStopRecording);
             this.groupBox1.Controls.Add(this.btnStartRecording);
             this.groupBox1.Controls.Add(this.listBoxRecordings);
             this.groupBox1.Controls.Add(this.progressBar1);
             this.groupBox1.Location = new System.Drawing.Point(28, 25);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(297, 336);
+            this.groupBox1.Size = new System.Drawing.Size(373, 393);
             this.groupBox1.TabIndex = 12;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Manual recording";
+            // 
+            // numericUpDown1
+            // 
+            this.numericUpDown1.Location = new System.Drawing.Point(54, 204);
+            this.numericUpDown1.Maximum = new decimal(new int[] {
+            120,
+            0,
+            0,
+            0});
+            this.numericUpDown1.Minimum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.numericUpDown1.Name = "numericUpDown1";
+            this.numericUpDown1.Size = new System.Drawing.Size(59, 20);
+            this.numericUpDown1.TabIndex = 15;
+            this.numericUpDown1.Value = new decimal(new int[] {
+            60,
+            0,
+            0,
+            0});
+            this.numericUpDown1.ValueChanged += new System.EventHandler(this.numericUpDown1_ValueChanged);
             // 
             // chk2ndAvail
             // 
@@ -179,6 +211,16 @@
             this.label4.TabIndex = 12;
             this.label4.Text = "Input source #2";
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(29, 188);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(100, 13);
+            this.label5.TabIndex = 11;
+            this.label5.Text = "Recode length(sec)";
+            this.label5.Click += new System.EventHandler(this.label5_Click);
+            // 
             // label3
             // 
             this.label3.AutoSize = true;
@@ -200,7 +242,7 @@
             // listBoxRecordings
             // 
             this.listBoxRecordings.FormattingEnabled = true;
-            this.listBoxRecordings.Location = new System.Drawing.Point(16, 247);
+            this.listBoxRecordings.Location = new System.Drawing.Point(19, 318);
             this.listBoxRecordings.Name = "listBoxRecordings";
             this.listBoxRecordings.Size = new System.Drawing.Size(266, 69);
             this.listBoxRecordings.TabIndex = 6;
@@ -209,9 +251,9 @@
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.btnMTConnect);
-            this.groupBox2.Location = new System.Drawing.Point(352, 32);
+            this.groupBox2.Location = new System.Drawing.Point(407, 32);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(265, 329);
+            this.groupBox2.Size = new System.Drawing.Size(210, 386);
             this.groupBox2.TabIndex = 13;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "MTConnect adapter";
@@ -219,12 +261,12 @@
             // txtStatus
             // 
             this.txtStatus.AcceptsReturn = true;
-            this.txtStatus.Location = new System.Drawing.Point(28, 381);
+            this.txtStatus.Location = new System.Drawing.Point(28, 424);
             this.txtStatus.Multiline = true;
             this.txtStatus.Name = "txtStatus";
             this.txtStatus.ReadOnly = true;
             this.txtStatus.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtStatus.Size = new System.Drawing.Size(589, 140);
+            this.txtStatus.Size = new System.Drawing.Size(589, 97);
             this.txtStatus.TabIndex = 14;
             // 
             // timer1
@@ -236,6 +278,25 @@
             // 
             this.timer2.Interval = 30000;
             this.timer2.Tick += new System.EventHandler(this.timer2_Tick);
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(166, 188);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(65, 13);
+            this.label6.TabIndex = 11;
+            this.label6.Text = "Max. Divisor";
+            this.label6.Click += new System.EventHandler(this.label5_Click);
+            // 
+            // textBoxMaxDivisor
+            // 
+            this.textBoxMaxDivisor.Location = new System.Drawing.Point(169, 203);
+            this.textBoxMaxDivisor.Name = "textBoxMaxDivisor";
+            this.textBoxMaxDivisor.Size = new System.Drawing.Size(71, 20);
+            this.textBoxMaxDivisor.TabIndex = 16;
+            this.textBoxMaxDivisor.Text = "5.0";
+            this.textBoxMaxDivisor.TextChanged += new System.EventHandler(this.textBoxMaxDivisor_TextChanged);
             // 
             // MicAdapter
             // 
@@ -250,6 +311,7 @@
             this.Load += new System.EventHandler(this.MicAdapter_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.groupBox2.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -277,6 +339,10 @@
         private System.Windows.Forms.ComboBox comboWasapiDevices2;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Timer timer2;
+        private System.Windows.Forms.NumericUpDown numericUpDown1;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox textBoxMaxDivisor;
     }
 }
 

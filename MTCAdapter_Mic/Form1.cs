@@ -18,6 +18,7 @@ using System.Threading;
 using XMLGathering;
 
 using MTC_adapter_daq;
+using NAudio.Mixer;
 
 
 // 8000, Mono
@@ -41,11 +42,12 @@ namespace MTCAdapter_Mic
         private string outputFolder;
         private string baseFolder;
 
+        private double maxDivisor = 5.0;
 
         // NI DAQ device
         private DAQHandler daq;
         private const int samplingRate = 1000;
-        private const int samplingSec = 30;
+        private int samplingSec = 60;
 
         // MTConnect - common
         private const int MTC_port_num = 7877;
@@ -70,6 +72,8 @@ namespace MTCAdapter_Mic
         // Folder numbering
         private static int folderNum = 1;
 
+        
+
 
 
         public MicAdapter()
@@ -93,6 +97,11 @@ namespace MTCAdapter_Mic
             //outputFilename = GetFileName();
 
             //timer1.Interval = (int)(runInterval * 1000);  
+
+
+            
+
+
 
         }
 
@@ -127,6 +136,7 @@ namespace MTCAdapter_Mic
             var devices2 = deviceEnum2.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).ToList();
 
             comboWasapiDevices.DataSource = devices;
+            
             comboWasapiDevices.DisplayMember = "FriendlyName";
 
             comboWasapiDevices2.DataSource = devices2;
@@ -177,7 +187,7 @@ namespace MTCAdapter_Mic
                 {
                     writer.Write(e.Buffer, 0, e.BytesRecorded);
                     int secondsRecorded = (int)(writer.Length / writer.WaveFormat.AverageBytesPerSecond);
-                    if (secondsRecorded >= 30)
+                    if (secondsRecorded >= 60)
                     {
                         StopRecording();
                     }
@@ -207,7 +217,7 @@ namespace MTCAdapter_Mic
                 {
                     writer2.Write(e.Buffer, 0, e.BytesRecorded);
                     int secondsRecorded = (int)(writer2.Length / writer.WaveFormat.AverageBytesPerSecond);
-                    if (secondsRecorded >= 30)
+                    if (secondsRecorded >= samplingSec)
                     {
                         StopRecording();
                     }
@@ -239,6 +249,8 @@ namespace MTCAdapter_Mic
 
         private void button1_Click(object sender, EventArgs e)
         {
+
+            progressBar1.Maximum = samplingSec;
             Directory.CreateDirectory(outputFolder);
 
             Debug.WriteLine("Starting Mic acquisition..");
@@ -246,7 +258,7 @@ namespace MTCAdapter_Mic
 
 
             Debug.WriteLine("Starting DAQ acquisition..");
-            daq = new DAQHandler(samplingRate);            
+            daq = new DAQHandler(samplingRate, samplingSec);            
 
         }
 
@@ -264,6 +276,7 @@ namespace MTCAdapter_Mic
             captureDevice = CreateWaveInDevice();                        
             var device = (MMDevice)comboWasapiDevices.SelectedItem; // Forcibly turn on the microphone (some programs (Skype) turn it off).
             device.AudioEndpointVolume.Mute = false;
+            device.AudioEndpointVolume.MasterVolumeLevel = device.AudioEndpointVolume.VolumeRange.MaxDecibels/ (float) maxDivisor;
             outputFilename = GetFileName();            
             writer = new WaveFileWriter(Path.Combine(outputFolder, outputFilename), captureDevice.WaveFormat);            
             captureDevice.StartRecording();
@@ -274,6 +287,7 @@ namespace MTCAdapter_Mic
                 captureDevice2 = CreateWaveInDevice2();
                 var device2 = (MMDevice)comboWasapiDevices2.SelectedItem; // Forcibly turn on the microphone (some programs (Skype) turn it off).
                 device2.AudioEndpointVolume.Mute = false;
+                device2.AudioEndpointVolume.MasterVolumeLevel = device2.AudioEndpointVolume.VolumeRange.MaxDecibels / (float)maxDivisor;
                 outputFilename2 = GetFileName2();
                 writer2 = new WaveFileWriter(Path.Combine(outputFolder, outputFilename2), captureDevice2.WaveFormat);                
                 captureDevice2.StartRecording();
@@ -504,6 +518,31 @@ namespace MTCAdapter_Mic
         {
             Debug.WriteLine("timer2 called");            
             
+            
+        }
+
+        private void label5_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void numericUpDown1_ValueChanged(object sender, EventArgs e)
+        {
+            samplingSec = Convert.ToInt32(numericUpDown1.Value);
+        }
+
+        
+
+        private void trackBar1_Scroll(object sender, EventArgs e)
+        {
+            
+
+
+        }
+
+        private void textBoxMaxDivisor_TextChanged(object sender, EventArgs e)
+        {
+            maxDivisor = Convert.ToDouble(textBoxMaxDivisor.Text);
             
         }
     }
